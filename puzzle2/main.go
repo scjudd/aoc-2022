@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"github.com/scjudd/aoc-2022/pkg/client"
+	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
 	"os"
 	"strings"
@@ -16,11 +16,11 @@ type scoring struct {
 }
 
 func main() {
-	aoc := client.Must(2022, 2)
+	a := advent.MustFromEnv(2022, 2)
 	input, _ := os.Open("input")
 	rounds := parseInput(input)
-	aoc.PrintPartOneResult(partOne(rounds))
-	aoc.PrintPartTwoResult(partTwo(rounds))
+	advent.PrintResult(advent.CheckPartOne(a, partOne(rounds)))
+	advent.PrintResult(advent.CheckPartTwo(a, partTwo(rounds)))
 }
 
 func partOne(rounds []round) int {

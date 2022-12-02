@@ -2,18 +2,18 @@ package main
 
 import (
 	"bufio"
-	"github.com/scjudd/aoc-2022/pkg/client"
+	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
 	"os"
 	"strconv"
 )
 
 func main() {
-	aoc := client.Must(2022, 1)
+	a := advent.MustFromEnv(2022, 1)
 	input, _ := os.Open("input")
 	calorieList := parseInput(input)
-	aoc.PrintPartOneResult(partOne(calorieList))
-	aoc.PrintPartTwoResult(partTwo(calorieList))
+	advent.PrintResult(advent.CheckPartOne(a, partOne(calorieList)))
+	advent.PrintResult(advent.CheckPartTwo(a, partTwo(calorieList)))
 }
 
 func partOne(calorieList [][]int) int {

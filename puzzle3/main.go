@@ -2,18 +2,18 @@ package main
 
 import (
 	"bufio"
-	"github.com/scjudd/aoc-2022/pkg/client"
+	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
 	"os"
 	"strings"
 )
 
 func main() {
-	aoc := client.Must(2022, 3)
+	a := advent.MustFromEnv(2022, 3)
 	input, _ := os.Open("input")
 	sacks := parseInput(input)
-	aoc.PrintPartOneResult(partOne(sacks))
-	aoc.PrintPartTwoResult(partTwo(sacks))
+	advent.PrintResult(advent.CheckPartOne(a, partOne(sacks)))
+	advent.PrintResult(advent.CheckPartTwo(a, partTwo(sacks)))
 }
 
 func partOne(sacks []string) int {
