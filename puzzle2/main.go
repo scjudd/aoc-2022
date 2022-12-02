@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
-	"os"
 	"strings"
 )
 
@@ -17,8 +16,15 @@ type scoring struct {
 
 func main() {
 	a := advent.MustFromEnv(2022, 2)
-	input, _ := os.Open("input")
+
+	input, err := advent.GetInput(a)
+	if err != nil {
+		panic(err)
+	}
+	defer input.Close()
+
 	rounds := parseInput(input)
+
 	advent.PrintResult(advent.CheckPartOne(a, partOne(rounds)))
 	advent.PrintResult(advent.CheckPartTwo(a, partTwo(rounds)))
 }

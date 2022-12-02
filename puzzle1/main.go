@@ -4,14 +4,20 @@ import (
 	"bufio"
 	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
-	"os"
 	"strconv"
 )
 
 func main() {
 	a := advent.MustFromEnv(2022, 1)
-	input, _ := os.Open("input")
+
+	input, err := advent.GetInput(a)
+	if err != nil {
+		panic(err)
+	}
+	defer input.Close()
+
 	calorieList := parseInput(input)
+
 	advent.PrintResult(advent.CheckPartOne(a, partOne(calorieList)))
 	advent.PrintResult(advent.CheckPartTwo(a, partTwo(calorieList)))
 }
