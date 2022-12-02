@@ -2,17 +2,18 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	"github.com/scjudd/aoc-2022/pkg/client"
 	"io"
 	"os"
 	"strconv"
 )
 
 func main() {
+	aoc := client.Must(2022, 1)
 	input, _ := os.Open("input")
 	calorieList := parseInput(input)
-	fmt.Printf("Part 1: %v\n", partOne(calorieList))
-	fmt.Printf("Part 2: %v\n", partTwo(calorieList))
+	aoc.PrintPartOneResult(partOne(calorieList))
+	aoc.PrintPartTwoResult(partTwo(calorieList))
 }
 
 func partOne(calorieList [][]int) int {

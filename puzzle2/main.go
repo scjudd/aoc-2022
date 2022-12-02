@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"fmt"
+	"github.com/scjudd/aoc-2022/pkg/client"
 	"io"
 	"os"
 	"strings"
@@ -16,10 +16,11 @@ type scoring struct {
 }
 
 func main() {
+	aoc := client.Must(2022, 2)
 	input, _ := os.Open("input")
 	rounds := parseInput(input)
-	fmt.Printf("Part 1: %v\n", partOne(rounds))
-	fmt.Printf("Part 2: %v\n", partTwo(rounds))
+	aoc.PrintPartOneResult(partOne(rounds))
+	aoc.PrintPartTwoResult(partTwo(rounds))
 }
 
 func partOne(rounds []round) int {
