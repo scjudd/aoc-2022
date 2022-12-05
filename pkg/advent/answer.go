@@ -3,14 +3,16 @@ package advent
 import (
 	"errors"
 	"fmt"
+	"github.com/scjudd/aoc-2022/pkg/advent/internal/cache"
 	"io"
 	"net/http"
-	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
 var errAlreadyComplete error = errors.New("already complete")
+var errInvalidAnswerType error = errors.New("invalid answer type")
 
 type PuzzleResult struct {
 	Level   int
@@ -47,40 +49,54 @@ func PrintResult(result *PuzzleResult, err error) {
 	fmt.Printf("%s)\n", colorReset)
 }
 
+func serializeAnswer(v interface{}) (string, error) {
+	var s string
+	switch v.(type) {
+	case int:
+		s = strconv.Itoa(v.(int))
+	case string:
+		s = v.(string)
+	default:
+		return "", errInvalidAnswerType
+	}
+	return s, nil
+}
+
 func checkAnswer(s *State, level int, answer interface{}) (correct bool, err error) {
-	result, err := checkAnswerCache(s.Year, s.Day, level, answer)
+	answerString, err := serializeAnswer(answer)
 	if err != nil {
-		return false, fmt.Errorf("error checking answer cache: %w", err)
+		return false, err
 	}
 
-	if result == cacheHitCorrect {
-		return true, nil
-	} else if result == cacheHitIncorrect {
-		return false, nil
+	correct, err = cache.GetAnswer(s.Year, s.Day, level, answerString)
+	if err == nil {
+		return correct, nil
+	} else if !cache.IsCacheMiss(err) {
+		return false, fmt.Errorf("error checking puzzle answer cache: %w", err)
 	}
 
-	correct, err = submitAnswer(s.Session, s.Year, s.Day, level, answer)
+	correct, err = submitAnswer(s.Session, s.Year, s.Day, level, answerString)
 	if err == errAlreadyComplete {
 		answerOne, answerTwo, err := getPreviousAnswers(s.Session, s.Year, s.Day)
 		if err != nil {
 			return false, fmt.Errorf("error fetching previous answers: %w\n", err)
 		}
 		if answerOne != "" {
-			err = updateAnswerCache(s.Year, s.Day, 1, answerOne, true)
+			err = cache.SaveAnswer(s.Year, s.Day, 1, answerOne, true)
 			if err != nil {
-				return false, fmt.Errorf("error updating answer cache: %w", err)
+				return false, fmt.Errorf("error updating puzzle answer cache: %w", err)
 			}
 		}
 		if answerTwo != "" {
-			err = updateAnswerCache(s.Year, s.Day, 2, answerTwo, true)
+			err = cache.SaveAnswer(s.Year, s.Day, 2, answerTwo, true)
 			if err != nil {
-				return false, fmt.Errorf("error updating answer cache: %w", err)
+				return false, fmt.Errorf("error updating puzzle answer cache: %w", err)
 			}
 		}
-		if level == 1 && fmt.Sprintf("%v", answer) == answerOne {
+		if level == 1 && answerString == answerOne {
 			return true, nil
 		}
-		if level == 2 && fmt.Sprintf("%v", answer) == answerTwo {
+		if level == 2 && answerString == answerTwo {
 			return true, nil
 		}
 		return false, nil
@@ -88,9 +104,9 @@ func checkAnswer(s *State, level int, answer interface{}) (correct bool, err err
 		return false, fmt.Errorf("error submitting answer: %w", err)
 	}
 
-	err = updateAnswerCache(s.Year, s.Day, level, answer, correct)
+	err = cache.SaveAnswer(s.Year, s.Day, level, answerString, correct)
 	if err != nil {
-		return correct, fmt.Errorf("error updating answer cache: %w", err)
+		return correct, fmt.Errorf("error updating puzzle answer cache: %w", err)
 	}
 
 	return correct, nil
@@ -136,78 +152,6 @@ func submitAnswer(session string, year, day, level int, answer interface{}) (cor
 	}
 
 	return false, fmt.Errorf("unexpected response: HTTP %d: %s", resp.StatusCode, respBody)
-}
-
-type cacheResult int
-
-const (
-	cacheError cacheResult = iota
-	cacheHitCorrect
-	cacheHitIncorrect
-	cacheMiss
-)
-
-func checkAnswerCache(year, day, level int, answer interface{}) (cacheResult, error) {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return cacheError, fmt.Errorf("error finding home directory: %w", err)
-	}
-
-	answerFile := fmt.Sprintf("%s/.cache/aoc/year-%d/day-%d/level-%d/answer-%v", homeDir, year, day, level, answer)
-
-	info, err := os.Stat(answerFile)
-	if os.IsNotExist(err) {
-		return cacheMiss, nil
-	}
-	if err != nil {
-		return cacheError, fmt.Errorf("answer file stat error: %w", err)
-	}
-	if info.IsDir() {
-		return cacheError, errors.New("answer file must not be a directory")
-	}
-
-	data, err := os.ReadFile(answerFile)
-	if err != nil {
-		return cacheError, fmt.Errorf("error reading answer file: %w", err)
-	}
-
-	if string(data) == "correct" {
-		return cacheHitCorrect, nil
-	} else if string(data) == "incorrect" {
-		return cacheHitIncorrect, nil
-	} else {
-		return cacheError, errors.New("invalid answer file data")
-	}
-}
-
-func updateAnswerCache(year, day, level int, answer interface{}, correct bool) error {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("error finding home directory: %w", err)
-	}
-
-	answerDir := fmt.Sprintf("%s/.cache/aoc/year-%d/day-%d/level-%d", homeDir, year, day, level)
-
-	err = os.MkdirAll(answerDir, 0755)
-	if err != nil {
-		return fmt.Errorf("error creating puzzle answer directory: %w", err)
-	}
-
-	answerFile := fmt.Sprintf("%s/answer-%v", answerDir, answer)
-
-	var data []byte
-	if correct {
-		data = []byte("correct")
-	} else {
-		data = []byte("incorrect")
-	}
-
-	err = os.WriteFile(answerFile, data, 0644)
-	if err != nil {
-		return fmt.Errorf("error writing answer file: %w", err)
-	}
-
-	return nil
 }
 
 func getPreviousAnswers(session string, year, day int) (string, string, error) {
