@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
 	"regexp"
@@ -22,11 +21,8 @@ func main() {
 	stacksCopy := make([]stack, len(stacks))
 	copy(stacksCopy, stacks)
 
-	fmt.Printf("Part 1: %s\n", partOne(stacks, instructions))
-	fmt.Printf("Part 2: %s\n", partTwo(stacksCopy, instructions))
-
-	// advent.PrintResult(advent.CheckPartOne(a, partOne(data)))
-	// advent.PrintResult(advent.CheckPartTwo(a, partTwo(data)))
+	advent.PrintResult(advent.CheckPartOne(a, partOne(stacks, instructions)))
+	advent.PrintResult(advent.CheckPartTwo(a, partTwo(stacksCopy, instructions)))
 }
 
 func partOne(stacks []stack, instructions []instruction) string {

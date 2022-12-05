@@ -12,17 +12,17 @@ import (
 
 type PuzzleResult struct {
 	Level   int
-	Answer  int
+	Answer  interface{}
 	Correct bool
 }
 
-func CheckPartOne(s *State, answer int) (*PuzzleResult, error) {
+func CheckPartOne(s *State, answer interface{}) (*PuzzleResult, error) {
 	level := 1
 	correct, err := checkAnswer(s, level, answer)
 	return &PuzzleResult{Level: level, Answer: answer, Correct: correct}, err
 }
 
-func CheckPartTwo(s *State, answer int) (*PuzzleResult, error) {
+func CheckPartTwo(s *State, answer interface{}) (*PuzzleResult, error) {
 	level := 2
 	correct, err := checkAnswer(s, level, answer)
 	return &PuzzleResult{Level: level, Answer: answer, Correct: correct}, err
@@ -34,7 +34,7 @@ func PrintResult(result *PuzzleResult, err error) {
 	colorGreen := "\033[32m"
 	colorYellow := "\033[33m"
 
-	fmt.Printf("%sPart %d: %d (", colorReset, result.Level, result.Answer)
+	fmt.Printf("%sPart %d: %v (", colorReset, result.Level, result.Answer)
 	if err != nil {
 		fmt.Printf("%s%s", colorYellow, err.Error())
 	} else if result.Correct {
@@ -45,7 +45,7 @@ func PrintResult(result *PuzzleResult, err error) {
 	fmt.Printf("%s)\n", colorReset)
 }
 
-func checkAnswer(s *State, level int, answer int) (correct bool, err error) {
+func checkAnswer(s *State, level int, answer interface{}) (correct bool, err error) {
 	result, err := checkAnswerCache(s.Year, s.Day, level, answer)
 	if err != nil {
 		return false, fmt.Errorf("error checking answer cache: %w", err)
@@ -70,9 +70,9 @@ func checkAnswer(s *State, level int, answer int) (correct bool, err error) {
 	return correct, nil
 }
 
-func submitAnswer(session string, year, day, level int, answer int) (correct bool, err error) {
+func submitAnswer(session string, year, day, level int, answer interface{}) (correct bool, err error) {
 	url := fmt.Sprintf("https://adventofcode.com/%d/day/%d/answer", year, day)
-	payload := fmt.Sprintf("level=%d&answer=%d", level, answer)
+	payload := fmt.Sprintf("level=%d&answer=%v", level, answer)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
 	req.Header.Add("Cookie", fmt.Sprintf("session=%s", session))
@@ -121,13 +121,13 @@ const (
 	cacheMiss
 )
 
-func checkAnswerCache(year, day, level int, answer int) (cacheResult, error) {
+func checkAnswerCache(year, day, level int, answer interface{}) (cacheResult, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return cacheError, fmt.Errorf("error finding home directory: %w", err)
 	}
 
-	answerFile := fmt.Sprintf("%s/.cache/aoc/year-%d/day-%d/level-%d/answer-%d", homeDir, year, day, level, answer)
+	answerFile := fmt.Sprintf("%s/.cache/aoc/year-%d/day-%d/level-%d/answer-%v", homeDir, year, day, level, answer)
 
 	info, err := os.Stat(answerFile)
 	if os.IsNotExist(err) {
@@ -154,7 +154,7 @@ func checkAnswerCache(year, day, level int, answer int) (cacheResult, error) {
 	}
 }
 
-func updateAnswerCache(year, day, level int, answer int, correct bool) error {
+func updateAnswerCache(year, day, level int, answer interface{}, correct bool) error {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return fmt.Errorf("error finding home directory: %w", err)
@@ -167,7 +167,7 @@ func updateAnswerCache(year, day, level int, answer int, correct bool) error {
 		return fmt.Errorf("error creating puzzle answer directory: %w", err)
 	}
 
-	answerFile := fmt.Sprintf("%s/answer-%d", answerDir, answer)
+	answerFile := fmt.Sprintf("%s/answer-%v", answerDir, answer)
 
 	var data []byte
 	if correct {
