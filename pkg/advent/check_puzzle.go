@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+var errAlreadyComplete error = errors.New("already complete")
+
 type PuzzleResult struct {
 	Level   int
 	Answer  interface{}
@@ -58,7 +60,31 @@ func checkAnswer(s *State, level int, answer interface{}) (correct bool, err err
 	}
 
 	correct, err = submitAnswer(s.Session, s.Year, s.Day, level, answer)
-	if err != nil {
+	if err == errAlreadyComplete {
+		answerOne, answerTwo, err := getPreviousAnswers(s.Session, s.Year, s.Day)
+		if err != nil {
+			return false, fmt.Errorf("error fetching previous answers: %w\n", err)
+		}
+		if answerOne != "" {
+			err = updateAnswerCache(s.Year, s.Day, 1, answerOne, true)
+			if err != nil {
+				return false, fmt.Errorf("error updating answer cache: %w", err)
+			}
+		}
+		if answerTwo != "" {
+			err = updateAnswerCache(s.Year, s.Day, 2, answerTwo, true)
+			if err != nil {
+				return false, fmt.Errorf("error updating answer cache: %w", err)
+			}
+		}
+		if level == 1 && fmt.Sprintf("%v", answer) == answerOne {
+			return true, nil
+		}
+		if level == 2 && fmt.Sprintf("%v", answer) == answerTwo {
+			return true, nil
+		}
+		return false, nil
+	} else if err != nil {
 		return false, fmt.Errorf("error submitting answer: %w", err)
 	}
 
@@ -100,7 +126,7 @@ func submitAnswer(session string, year, day, level int, answer interface{}) (cor
 	}
 
 	if strings.Contains(respBody, "Did you already complete it") {
-		return false, errors.New("already complete")
+		return false, errAlreadyComplete
 	}
 
 	if strings.Contains(respBody, "You gave an answer too recently") {
@@ -182,4 +208,39 @@ func updateAnswerCache(year, day, level int, answer interface{}, correct bool) e
 	}
 
 	return nil
+}
+
+func getPreviousAnswers(session string, year, day int) (string, string, error) {
+	url := fmt.Sprintf("https://adventofcode.com/%d/day/%d", year, day)
+
+	req, err := http.NewRequest("GET", url, nil)
+	req.Header.Add("Cookie", fmt.Sprintf("session=%s", session))
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", "", fmt.Errorf("error performing HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", fmt.Errorf("error reading HTTP response body: %w", err)
+	}
+
+	respBody := string(respBodyBytes)
+
+	re := regexp.MustCompile("Your puzzle answer was <code>(.+?)</code>")
+	matches := re.FindAllStringSubmatch(respBody, -1)
+
+	var puzzleOne, puzzleTwo string
+
+	if len(matches) >= 1 {
+		puzzleOne = matches[0][1]
+	}
+
+	if len(matches) == 2 {
+		puzzleTwo = matches[1][1]
+	}
+
+	return puzzleOne, puzzleTwo, nil
 }

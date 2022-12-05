@@ -18,11 +18,18 @@ func main() {
 	defer input.Close()
 
 	stacks, instructions := parseInput(input)
-	stacksCopy := make([]stack, len(stacks))
-	copy(stacksCopy, stacks)
 
 	advent.PrintResult(advent.CheckPartOne(a, partOne(stacks, instructions)))
-	advent.PrintResult(advent.CheckPartTwo(a, partTwo(stacksCopy, instructions)))
+	
+	input, err = advent.GetInput(a)
+	if err != nil {
+		panic(err)
+	}
+	defer input.Close()
+
+	stacks, instructions = parseInput(input)
+
+	advent.PrintResult(advent.CheckPartTwo(a, partTwo(stacks, instructions)))
 }
 
 func partOne(stacks []stack, instructions []instruction) string {
