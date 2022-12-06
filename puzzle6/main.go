@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
 	"strings"
+
+	"github.com/scjudd/aoc-2022/pkg/advent"
 )
 
 func main() {

@@ -2,9 +2,10 @@ package main
 
 import (
 	"bufio"
-	"github.com/scjudd/aoc-2022/pkg/advent"
 	"io"
 	"strings"
+
+	"github.com/scjudd/aoc-2022/pkg/advent"
 )
 
 type round [2]string
