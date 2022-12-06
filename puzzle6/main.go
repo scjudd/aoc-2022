@@ -7,15 +7,11 @@ import (
 )
 
 func main() {
-	a := advent.MustFromEnv(2022, 6)
-
-	input := advent.MustGetInput(a)
-	defer input.Close()
-
-	signal := parseInput(input)
-
-	advent.PrintResult(advent.CheckPartOne(a, partOne(signal)))
-	advent.PrintResult(advent.CheckPartTwo(a, partTwo(signal)))
+	year, day := 2022, 6
+	session := advent.MustLoadSession()
+	data := parseInput(advent.MustGetInput(session, year, day))
+	advent.PrintResult(advent.Check(session, year, day, 1, partOne(data)))
+	advent.PrintResult(advent.Check(session, year, day, 2, partTwo(data)))
 }
 
 func partOne(signal string) int {

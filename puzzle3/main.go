@@ -8,15 +8,11 @@ import (
 )
 
 func main() {
-	a := advent.MustFromEnv(2022, 3)
-
-	input := advent.MustGetInput(a)
-	defer input.Close()
-
-	sacks := parseInput(input)
-
-	advent.PrintResult(advent.CheckPartOne(a, partOne(sacks)))
-	advent.PrintResult(advent.CheckPartTwo(a, partTwo(sacks)))
+	year, day := 2022, 3
+	session := advent.MustLoadSession()
+	data := parseInput(advent.MustGetInput(session, year, day))
+	advent.PrintResult(advent.Check(session, year, day, 1, partOne(data)))
+	advent.PrintResult(advent.Check(session, year, day, 2, partTwo(data)))
 }
 
 func partOne(sacks []string) int {

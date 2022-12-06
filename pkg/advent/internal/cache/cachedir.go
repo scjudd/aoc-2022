@@ -13,14 +13,6 @@ func puzzleDayDir(year, day int) (string, error) {
 		return "", fmt.Errorf("error looking up home directory: %w", err)
 	}
 
-	if year < 2015 {
-		return "", errors.New("there are no events prior to 2015")
-	}
-
-	if day < 1 || day > 25 {
-		return "", errors.New("there are 25 days in an event")
-	}
-
 	return filepath.Join(homeDir, ".cache", "aoc", fmt.Sprintf("year-%d", year), fmt.Sprintf("day-%d", day)), nil
 }
 

@@ -17,16 +17,12 @@ type instruction struct {
 }
 
 func main() {
-	a := advent.MustFromEnv(2022, 5)
-
-	input := advent.MustGetInput(a)
-	defer input.Close()
-
-	partOneStacks, instructions := parseInput(input)
+	year, day := 2022, 5
+	session := advent.MustLoadSession()
+	partOneStacks, instructions := parseInput(advent.MustGetInput(session, year, day))
 	partTwoStacks := copyStacks(partOneStacks)
-
-	advent.PrintResult(advent.CheckPartOne(a, partOne(partOneStacks, instructions)))
-	advent.PrintResult(advent.CheckPartTwo(a, partTwo(partTwoStacks, instructions)))
+	advent.PrintResult(advent.Check(session, year, day, 1, partOne(partOneStacks, instructions)))
+	advent.PrintResult(advent.Check(session, year, day, 2, partTwo(partTwoStacks, instructions)))
 }
 
 func partOne(stacks []stack, instructions []instruction) string {

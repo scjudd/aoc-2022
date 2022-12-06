@@ -12,36 +12,42 @@ import (
 )
 
 var errAlreadyComplete error = errors.New("already complete")
-var errInvalidAnswerType error = errors.New("invalid answer type")
 
-type PuzzleResult struct {
-	Level   int
-	Answer  interface{}
-	Correct bool
+type Result struct {
+	year    int
+	day     int
+	level   int
+	answer  string
+	correct bool
 }
 
-func CheckPartOne(s *State, answer interface{}) (*PuzzleResult, error) {
-	level := 1
-	correct, err := checkAnswer(s, level, answer)
-	return &PuzzleResult{Level: level, Answer: answer, Correct: correct}, err
+func (result Result) Correct() bool {
+	return result.correct
 }
 
-func CheckPartTwo(s *State, answer interface{}) (*PuzzleResult, error) {
-	level := 2
-	correct, err := checkAnswer(s, level, answer)
-	return &PuzzleResult{Level: level, Answer: answer, Correct: correct}, err
+func Check(session string, year, day, level int, answerValue interface{}) (*Result, error) {
+	result := &Result{year: year, day: day, level: level}
+	answer, err := answerString(answerValue)
+	if err != nil {
+		result.answer = fmt.Sprintf("%v", answerValue)
+		result.correct = false
+		return result, err
+	}
+	result.answer = answer
+	result.correct, err = checkAnswer(session, year, day, level, answer)
+	return result, err
 }
 
-func PrintResult(result *PuzzleResult, err error) {
+func PrintResult(result *Result, err error) {
 	colorReset := "\033[0m"
 	colorRed := "\033[31m"
 	colorGreen := "\033[32m"
 	colorYellow := "\033[33m"
 
-	fmt.Printf("%sPart %d: %v (", colorReset, result.Level, result.Answer)
+	fmt.Printf("%sPart %d: %v (", colorReset, result.level, result.answer)
 	if err != nil {
 		fmt.Printf("%s%s", colorYellow, err.Error())
-	} else if result.Correct {
+	} else if result.correct {
 		fmt.Printf("%sCORRECT! ⭐", colorGreen)
 	} else {
 		fmt.Printf("%sIncorrect...", colorRed)
@@ -49,7 +55,7 @@ func PrintResult(result *PuzzleResult, err error) {
 	fmt.Printf("%s)\n", colorReset)
 }
 
-func serializeAnswer(v interface{}) (string, error) {
+func answerString(v interface{}) (string, error) {
 	var s string
 	switch v.(type) {
 	case int:
@@ -57,46 +63,41 @@ func serializeAnswer(v interface{}) (string, error) {
 	case string:
 		s = v.(string)
 	default:
-		return "", errInvalidAnswerType
+		return "", errors.New("invalid answer type")
 	}
 	return s, nil
 }
 
-func checkAnswer(s *State, level int, answer interface{}) (correct bool, err error) {
-	answerString, err := serializeAnswer(answer)
-	if err != nil {
-		return false, err
-	}
-
-	correct, err = cache.GetAnswer(s.Year, s.Day, level, answerString)
+func checkAnswer(session string, year, day, level int, answer string) (correct bool, err error) {
+	correct, err = cache.GetAnswer(year, day, level, answer)
 	if err == nil {
 		return correct, nil
 	} else if !cache.IsCacheMiss(err) {
 		return false, fmt.Errorf("error checking puzzle answer cache: %w", err)
 	}
 
-	correct, err = submitAnswer(s.Session, s.Year, s.Day, level, answerString)
+	correct, err = submitAnswer(session, year, day, level, answer)
 	if err == errAlreadyComplete {
-		answerOne, answerTwo, err := getPreviousAnswers(s.Session, s.Year, s.Day)
+		answerOne, answerTwo, err := getPreviousAnswers(session, year, day)
 		if err != nil {
 			return false, fmt.Errorf("error fetching previous answers: %w\n", err)
 		}
 		if answerOne != "" {
-			err = cache.SaveAnswer(s.Year, s.Day, 1, answerOne, true)
+			err = cache.SaveAnswer(year, day, 1, answerOne, true)
 			if err != nil {
 				return false, fmt.Errorf("error updating puzzle answer cache: %w", err)
 			}
 		}
 		if answerTwo != "" {
-			err = cache.SaveAnswer(s.Year, s.Day, 2, answerTwo, true)
+			err = cache.SaveAnswer(year, day, 2, answerTwo, true)
 			if err != nil {
 				return false, fmt.Errorf("error updating puzzle answer cache: %w", err)
 			}
 		}
-		if level == 1 && answerString == answerOne {
+		if level == 1 && answer == answerOne {
 			return true, nil
 		}
-		if level == 2 && answerString == answerTwo {
+		if level == 2 && answer == answerTwo {
 			return true, nil
 		}
 		return false, nil
@@ -104,7 +105,7 @@ func checkAnswer(s *State, level int, answer interface{}) (correct bool, err err
 		return false, fmt.Errorf("error submitting answer: %w", err)
 	}
 
-	err = cache.SaveAnswer(s.Year, s.Day, level, answerString, correct)
+	err = cache.SaveAnswer(year, day, level, answer, correct)
 	if err != nil {
 		return correct, fmt.Errorf("error updating puzzle answer cache: %w", err)
 	}
@@ -112,9 +113,9 @@ func checkAnswer(s *State, level int, answer interface{}) (correct bool, err err
 	return correct, nil
 }
 
-func submitAnswer(session string, year, day, level int, answer interface{}) (correct bool, err error) {
+func submitAnswer(session string, year, day, level int, answer string) (correct bool, err error) {
 	url := fmt.Sprintf("https://adventofcode.com/%d/day/%d/answer", year, day)
-	payload := fmt.Sprintf("level=%d&answer=%v", level, answer)
+	payload := fmt.Sprintf("level=%d&answer=%s", level, answer)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
 	req.Header.Add("Cookie", fmt.Sprintf("session=%s", session))

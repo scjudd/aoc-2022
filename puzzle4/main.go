@@ -22,15 +22,11 @@ func (this span) overlaps(other span) bool {
 }
 
 func main() {
-	a := advent.MustFromEnv(2022, 4)
-
-	input := advent.MustGetInput(a)
-	defer input.Close()
-
-	pairs := parseInput(input)
-
-	advent.PrintResult(advent.CheckPartOne(a, partOne(pairs)))
-	advent.PrintResult(advent.CheckPartTwo(a, partTwo(pairs)))
+	year, day := 2022, 4
+	session := advent.MustLoadSession()
+	data := parseInput(advent.MustGetInput(session, year, day))
+	advent.PrintResult(advent.Check(session, year, day, 1, partOne(data)))
+	advent.PrintResult(advent.Check(session, year, day, 2, partTwo(data)))
 }
 
 func partOne(pairs [][2]span) int {

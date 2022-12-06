@@ -8,15 +8,11 @@ import (
 )
 
 func main() {
-	a := advent.MustFromEnv(2022, 1)
-
-	input := advent.MustGetInput(a)
-	defer input.Close()
-
-	calorieList := parseInput(input)
-
-	advent.PrintResult(advent.CheckPartOne(a, partOne(calorieList)))
-	advent.PrintResult(advent.CheckPartTwo(a, partTwo(calorieList)))
+	year, day := 2022, 1
+	session := advent.MustLoadSession()
+	data := parseInput(advent.MustGetInput(session, year, day))
+	advent.PrintResult(advent.Check(session, year, day, 1, partOne(data)))
+	advent.PrintResult(advent.Check(session, year, day, 2, partTwo(data)))
 }
 
 func partOne(calorieList [][]int) int {

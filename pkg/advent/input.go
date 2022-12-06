@@ -8,15 +8,15 @@ import (
 	"net/http"
 )
 
-func GetInput(s *State) (io.ReadCloser, error) {
-	input, err := cache.GetInput(s.Year, s.Day)
+func GetInput(session string, year, day int) (io.ReadCloser, error) {
+	input, err := cache.GetInput(year, day)
 	if err == nil {
 		return input, nil
 	} else if !cache.IsCacheMiss(err) {
 		return nil, fmt.Errorf("error checking puzzle input cache: %w", err)
 	}
 
-	input, err = getLiveInput(s.Session, s.Year, s.Day)
+	input, err = getLiveInput(session, year, day)
 	if err != nil {
 		return nil, fmt.Errorf("error getting live puzzle input: %w", err)
 	}
@@ -25,7 +25,7 @@ func GetInput(s *State) (io.ReadCloser, error) {
 	copied := new(bytes.Buffer)
 	cacheInput := io.TeeReader(input, copied)
 
-	err = cache.SaveInput(s.Year, s.Day, cacheInput)
+	err = cache.SaveInput(year, day, cacheInput)
 	if err != nil {
 		return nil, fmt.Errorf("error updating puzzle input cache: %w", err)
 	}
@@ -33,8 +33,8 @@ func GetInput(s *State) (io.ReadCloser, error) {
 	return io.NopCloser(copied), nil
 }
 
-func MustGetInput(s *State) io.ReadCloser {
-	input, err := GetInput(s)
+func MustGetInput(session string, year, day int) io.ReadCloser {
+	input, err := GetInput(session, year, day)
 	if err != nil {
 		panic(err)
 	}

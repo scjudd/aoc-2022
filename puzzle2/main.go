@@ -15,15 +15,11 @@ type scoring struct {
 }
 
 func main() {
-	a := advent.MustFromEnv(2022, 2)
-
-	input := advent.MustGetInput(a)
-	defer input.Close()
-
-	rounds := parseInput(input)
-
-	advent.PrintResult(advent.CheckPartOne(a, partOne(rounds)))
-	advent.PrintResult(advent.CheckPartTwo(a, partTwo(rounds)))
+	year, day := 2022, 2
+	session := advent.MustLoadSession()
+	data := parseInput(advent.MustGetInput(session, year, day))
+	advent.PrintResult(advent.Check(session, year, day, 1, partOne(data)))
+	advent.PrintResult(advent.Check(session, year, day, 2, partTwo(data)))
 }
 
 func partOne(rounds []round) int {
