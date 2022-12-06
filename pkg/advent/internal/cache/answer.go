@@ -12,6 +12,7 @@ const (
 	answerIncorrect = "incorrect"
 )
 
+// GetAnswer returns a puzzle answer from cache.
 func GetAnswer(year, day, level int, answer string) (bool, error) {
 	path, err := answerPath(year, day, level, answer)
 	if err != nil {
@@ -39,6 +40,7 @@ func GetAnswer(year, day, level int, answer string) (bool, error) {
 	}
 }
 
+// SaveAnswer saves a puzzle answer to the cache.
 func SaveAnswer(year, day, level int, answer string, correct bool) error {
 	path, err := answerPath(year, day, level, answer)
 	if err != nil {

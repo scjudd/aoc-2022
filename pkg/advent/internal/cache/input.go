@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 )
 
+// GetInput returns a puzzle input from the cache.
 func GetInput(year, day int) (io.ReadCloser, error) {
 	path, err := puzzleInputPath(year, day)
 	if err != nil {
@@ -28,6 +29,7 @@ func GetInput(year, day int) (io.ReadCloser, error) {
 	return input, nil
 }
 
+// SaveInput saves a puzzle input to the cache.
 func SaveInput(year, day int, input io.Reader) error {
 	path, err := puzzleInputPath(year, day)
 	if err != nil {

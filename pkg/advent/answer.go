@@ -3,16 +3,20 @@ package advent
 import (
 	"errors"
 	"fmt"
-	"github.com/scjudd/aoc-2022/pkg/advent/internal/cache"
 	"io"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/scjudd/aoc-2022/pkg/advent/internal/cache"
 )
 
-var errAlreadyComplete error = errors.New("already complete")
+var errAlreadyComplete = errors.New("already complete")
 
+// A Result is returned when checking an answer. It may be passed to
+// PrintResult for easy use in puzzle solution code, or its Correct method may
+// be called to infer whether an answer was correct.
 type Result struct {
 	year    int
 	day     int
@@ -21,10 +25,15 @@ type Result struct {
 	correct bool
 }
 
+// Correct returns true if the answer submission which produced this Result is
+// correct.
 func (result Result) Correct() bool {
 	return result.correct
 }
 
+// Check whether or not an answer is correct. If the concrete type of
+// answerValue is not a string or an int, an error is returned. An error may
+// also be returned if there are any issues during answer submission.
 func Check(session string, year, day, level int, answerValue interface{}) (*Result, error) {
 	result := &Result{year: year, day: day, level: level}
 	answer, err := answerString(answerValue)
@@ -38,6 +47,10 @@ func Check(session string, year, day, level int, answerValue interface{}) (*Resu
 	return result, err
 }
 
+// PrintResult formats and prints the result of an answer check. This is
+// designed for easy composition with the Check function, which is why it takes
+// an error as a second parameter. If this error is non-nil, it will be printed
+// along with the result.
 func PrintResult(result *Result, err error) {
 	colorReset := "\033[0m"
 	colorRed := "\033[31m"
@@ -55,17 +68,14 @@ func PrintResult(result *Result, err error) {
 	fmt.Printf("%s)\n", colorReset)
 }
 
-func answerString(v interface{}) (string, error) {
-	var s string
-	switch v.(type) {
+func answerString(i interface{}) (string, error) {
+	switch v := i.(type) {
 	case int:
-		s = strconv.Itoa(v.(int))
+		return strconv.Itoa(v), nil
 	case string:
-		s = v.(string)
-	default:
-		return "", errors.New("invalid answer type")
+		return v, nil
 	}
-	return s, nil
+	return "", errors.New("invalid answer type")
 }
 
 func checkAnswer(session string, year, day, level int, answer string) (correct bool, err error) {
@@ -80,7 +90,7 @@ func checkAnswer(session string, year, day, level int, answer string) (correct b
 	if err == errAlreadyComplete {
 		answerOne, answerTwo, err := getPreviousAnswers(session, year, day)
 		if err != nil {
-			return false, fmt.Errorf("error fetching previous answers: %w\n", err)
+			return false, fmt.Errorf("error fetching previous answers: %w", err)
 		}
 		if answerOne != "" {
 			err = cache.SaveAnswer(year, day, 1, answerOne, true)
@@ -118,6 +128,10 @@ func submitAnswer(session string, year, day, level int, answer string) (correct 
 	payload := fmt.Sprintf("level=%d&answer=%s", level, answer)
 
 	req, err := http.NewRequest("POST", url, strings.NewReader(payload))
+	if err != nil {
+		panic(err)
+	}
+
 	req.Header.Add("Cookie", fmt.Sprintf("session=%s", session))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
@@ -159,6 +173,10 @@ func getPreviousAnswers(session string, year, day int) (string, string, error) {
 	url := fmt.Sprintf("https://adventofcode.com/%d/day/%d", year, day)
 
 	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		panic(err)
+	}
+
 	req.Header.Add("Cookie", fmt.Sprintf("session=%s", session))
 
 	resp, err := http.DefaultClient.Do(req)
