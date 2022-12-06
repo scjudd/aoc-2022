@@ -11,20 +11,14 @@ import (
 func main() {
 	a := advent.MustFromEnv(2022, 5)
 
-	input, err := advent.GetInput(a)
-	if err != nil {
-		panic(err)
-	}
+	input := advent.MustGetInput(a)
 	defer input.Close()
 
 	stacks, instructions := parseInput(input)
 
 	advent.PrintResult(advent.CheckPartOne(a, partOne(stacks, instructions)))
 	
-	input, err = advent.GetInput(a)
-	if err != nil {
-		panic(err)
-	}
+	input = advent.MustGetInput(a)
 	defer input.Close()
 
 	stacks, instructions = parseInput(input)

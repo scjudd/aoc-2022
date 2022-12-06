@@ -33,6 +33,14 @@ func GetInput(s *State) (io.ReadCloser, error) {
 	return io.NopCloser(copied), nil
 }
 
+func MustGetInput(s *State) io.ReadCloser {
+	input, err := GetInput(s)
+	if err != nil {
+		panic(err)
+	}
+	return input
+}
+
 func getLiveInput(session string, year, day int) (io.ReadCloser, error) {
 	url := fmt.Sprintf("https://adventofcode.com/%d/day/%d/input", year, day)
 

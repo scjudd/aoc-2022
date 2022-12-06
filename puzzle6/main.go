@@ -9,10 +9,7 @@ import (
 func main() {
 	a := advent.MustFromEnv(2022, 6)
 
-	input, err := advent.GetInput(a)
-	if err != nil {
-		panic(err)
-	}
+	input := advent.MustGetInput(a)
 	defer input.Close()
 
 	signal := parseInput(input)

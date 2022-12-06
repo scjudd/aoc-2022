@@ -24,10 +24,7 @@ func (this span) overlaps(other span) bool {
 func main() {
 	a := advent.MustFromEnv(2022, 4)
 
-	input, err := advent.GetInput(a)
-	if err != nil {
-		panic(err)
-	}
+	input := advent.MustGetInput(a)
 	defer input.Close()
 
 	pairs := parseInput(input)

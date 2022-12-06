@@ -17,10 +17,7 @@ type scoring struct {
 func main() {
 	a := advent.MustFromEnv(2022, 2)
 
-	input, err := advent.GetInput(a)
-	if err != nil {
-		panic(err)
-	}
+	input := advent.MustGetInput(a)
 	defer input.Close()
 
 	rounds := parseInput(input)

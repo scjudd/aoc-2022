@@ -10,10 +10,7 @@ import (
 func main() {
 	a := advent.MustFromEnv(2022, 3)
 
-	input, err := advent.GetInput(a)
-	if err != nil {
-		panic(err)
-	}
+	input := advent.MustGetInput(a)
 	defer input.Close()
 
 	sacks := parseInput(input)
